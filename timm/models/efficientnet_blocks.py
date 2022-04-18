@@ -44,7 +44,7 @@ class SqueezeExcite(nn.Module):
             rd_channels = rd_round_fn(in_chs * rd_ratio)
         act_layer = force_act_layer or act_layer
         self.conv_reduce = nn.Conv2d(in_chs, rd_channels, 1, bias=True)
-        self.act1 = create_act_layer(act_layer, inplace=True)
+        self.act1 = create_act_layer(act_layer, inplace=False)
         self.conv_expand = nn.Conv2d(rd_channels, in_chs, 1, bias=True)
         self.gate = create_act_layer(gate_layer)
 
@@ -69,7 +69,7 @@ class ConvBnAct(nn.Module):
 
         self.conv = create_conv2d(
             in_chs, out_chs, kernel_size, stride=stride, dilation=dilation, groups=groups, padding=pad_type)
-        self.bn1 = norm_act_layer(out_chs, inplace=True)
+        self.bn1 = norm_act_layer(out_chs, inplace=False)
         self.drop_path = DropPath(drop_path_rate) if drop_path_rate else nn.Identity()
 
     def feature_info(self, location):
@@ -104,13 +104,13 @@ class DepthwiseSeparableConv(nn.Module):
 
         self.conv_dw = create_conv2d(
             in_chs, in_chs, dw_kernel_size, stride=stride, dilation=dilation, padding=pad_type, groups=groups)
-        self.bn1 = norm_act_layer(in_chs, inplace=True)
+        self.bn1 = norm_act_layer(in_chs, inplace=False)
 
         # Squeeze-and-excitation
         self.se = se_layer(in_chs, act_layer=act_layer) if se_layer else nn.Identity()
 
         self.conv_pw = create_conv2d(in_chs, out_chs, pw_kernel_size, padding=pad_type)
-        self.bn2 = norm_act_layer(out_chs, inplace=True, apply_act=self.has_pw_act)
+        self.bn2 = norm_act_layer(out_chs, inplace=False, apply_act=self.has_pw_act)
         self.drop_path = DropPath(drop_path_rate) if drop_path_rate else nn.Identity()
 
     def feature_info(self, location):
@@ -154,13 +154,13 @@ class InvertedResidual(nn.Module):
 
         # Point-wise expansion
         self.conv_pw = create_conv2d(in_chs, mid_chs, exp_kernel_size, padding=pad_type, **conv_kwargs)
-        self.bn1 = norm_act_layer(mid_chs, inplace=True)
+        self.bn1 = norm_act_layer(mid_chs, inplace=False)
 
         # Depth-wise convolution
         self.conv_dw = create_conv2d(
             mid_chs, mid_chs, dw_kernel_size, stride=stride, dilation=dilation,
             groups=groups, padding=pad_type, **conv_kwargs)
-        self.bn2 = norm_act_layer(mid_chs, inplace=True)
+        self.bn2 = norm_act_layer(mid_chs, inplace=False)
 
         # Squeeze-and-excitation
         self.se = se_layer(mid_chs, act_layer=act_layer) if se_layer else nn.Identity()
@@ -253,7 +253,7 @@ class EdgeResidual(nn.Module):
         # Expansion convolution
         self.conv_exp = create_conv2d(
             in_chs, mid_chs, exp_kernel_size, stride=stride, dilation=dilation, groups=groups, padding=pad_type)
-        self.bn1 = norm_act_layer(mid_chs, inplace=True)
+        self.bn1 = norm_act_layer(mid_chs, inplace=False)
 
         # Squeeze-and-excitation
         self.se = se_layer(mid_chs, act_layer=act_layer) if se_layer else nn.Identity()
